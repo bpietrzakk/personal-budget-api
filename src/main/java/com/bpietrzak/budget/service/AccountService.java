@@ -5,11 +5,14 @@ import com.bpietrzak.budget.dto.AccountResponse;
 import com.bpietrzak.budget.exception.ConflictException;
 import com.bpietrzak.budget.exception.ResourceNotFoundException;
 import com.bpietrzak.budget.model.Account;
+import com.bpietrzak.budget.model.Transaction;
 import com.bpietrzak.budget.repository.AccountRepository;
 import com.bpietrzak.budget.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -48,6 +51,26 @@ public class AccountService {
             throw new ConflictException("Cannot delete account with existing transactions");
         }
         accountRepository.delete(account);
+    }
+
+    public void writeCsv(UUID accountId, PrintWriter writer) throws IOException {
+        writer.println("date,type,amount,category,description");
+        for (Transaction t : transactionRepository.findByAccountIdOrderByTransactionDateDesc(accountId)) {
+            writer.printf("%s,%s,%s,%s,%s%n",
+                    t.getTransactionDate(),
+                    t.getType(),
+                    t.getAmount(),
+                    escapeCsv(t.getCategory()),
+                    escapeCsv(t.getDescription()));
+        }
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     private AccountResponse toResponse(Account account) {

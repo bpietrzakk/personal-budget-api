@@ -7,6 +7,7 @@ import com.bpietrzak.budget.model.Account;
 import com.bpietrzak.budget.model.Transaction;
 import com.bpietrzak.budget.model.enums.TransactionType;
 import com.bpietrzak.budget.repository.AccountRepository;
+import com.bpietrzak.budget.repository.CategoryLimitRepository;
 import com.bpietrzak.budget.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +25,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final CategoryLimitRepository categoryLimitRepository;
 
     @Transactional
     public TransactionResponse create(TransactionCreateRequest request) {
@@ -44,12 +47,14 @@ public class TransactionService {
                 .build();
 
         accountRepository.save(account);
-        return toResponse(transactionRepository.save(transaction));
+        Transaction saved = transactionRepository.save(transaction);
+        List<String> warnings = buildWarnings(request);
+        return toResponse(saved, warnings);
     }
 
     public List<TransactionResponse> findAll(LocalDate from, LocalDate to, String category) {
         return transactionRepository.findWithFilters(from, to, category).stream()
-                .map(this::toResponse)
+                .map(t -> toResponse(t, List.of()))
                 .toList();
     }
 
@@ -68,7 +73,27 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
-    private TransactionResponse toResponse(Transaction t) {
+    private List<String> buildWarnings(TransactionCreateRequest request) {
+        if (request.getType() != TransactionType.EXPENSE) {
+            return List.of();
+        }
+        return categoryLimitRepository.findByCategory(request.getCategory())
+                .map(limit -> {
+                    BigDecimal spentThisMonth = transactionRepository
+                            .sumExpensesThisMonthByCategory(request.getCategory());
+                    if (spentThisMonth.add(request.getAmount()).compareTo(limit.getLimitAmount()) > 0) {
+                        return List.of(String.format(
+                                "Monthly limit for '%s' exceeded: limit %.2f, spent %.2f this month",
+                                request.getCategory(),
+                                limit.getLimitAmount(),
+                                spentThisMonth.add(request.getAmount())));
+                    }
+                    return List.<String>of();
+                })
+                .orElse(List.of());
+    }
+
+    private TransactionResponse toResponse(Transaction t, List<String> warnings) {
         return TransactionResponse.builder()
                 .id(t.getId())
                 .type(t.getType())
@@ -78,6 +103,7 @@ public class TransactionService {
                 .transactionDate(t.getTransactionDate())
                 .createdAt(t.getCreatedAt())
                 .accountId(t.getAccount().getId())
+                .warnings(warnings.isEmpty() ? null : warnings)
                 .build();
     }
 }

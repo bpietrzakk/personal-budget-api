@@ -15,6 +15,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     boolean existsByAccountId(UUID accountId);
 
+    List<Transaction> findByAccountIdOrderByTransactionDateDesc(UUID accountId);
+
     @Query("SELECT t FROM Transaction t WHERE " +
            "(:from IS NULL OR t.transactionDate >= :from) AND " +
            "(:to IS NULL OR t.transactionDate <= :to) AND " +
@@ -33,6 +35,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("from") LocalDate from,
             @Param("to") LocalDate to
     );
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = 'EXPENSE' AND " +
+           "t.category = :category AND " +
+           "YEAR(t.transactionDate) = YEAR(CURRENT_DATE) AND MONTH(t.transactionDate) = MONTH(CURRENT_DATE)")
+    BigDecimal sumExpensesThisMonthByCategory(@Param("category") String category);
 
     @Query("SELECT t.category, SUM(t.amount) FROM Transaction t WHERE t.type = 'EXPENSE' AND " +
            "(:from IS NULL OR t.transactionDate >= :from) AND " +

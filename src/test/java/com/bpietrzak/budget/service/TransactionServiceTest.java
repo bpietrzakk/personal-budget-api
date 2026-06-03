@@ -6,6 +6,7 @@ import com.bpietrzak.budget.model.Account;
 import com.bpietrzak.budget.model.Transaction;
 import com.bpietrzak.budget.model.enums.TransactionType;
 import com.bpietrzak.budget.repository.AccountRepository;
+import com.bpietrzak.budget.repository.CategoryLimitRepository;
 import com.bpietrzak.budget.repository.TransactionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ class TransactionServiceTest {
 
     @Mock private TransactionRepository transactionRepository;
     @Mock private AccountRepository accountRepository;
+    @Mock private CategoryLimitRepository categoryLimitRepository;
     @InjectMocks private TransactionService transactionService;
 
     @Test
