@@ -1,10 +1,12 @@
 package com.bpietrzak.budget.repository;
 
 import com.bpietrzak.budget.model.Transaction;
+import com.bpietrzak.budget.model.enums.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -21,5 +23,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("from") LocalDate from,
             @Param("to") LocalDate to,
             @Param("category") String category
+    );
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = :type AND " +
+           "(:from IS NULL OR t.transactionDate >= :from) AND " +
+           "(:to IS NULL OR t.transactionDate <= :to)")
+    BigDecimal sumByType(
+            @Param("type") TransactionType type,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to
+    );
+
+    @Query("SELECT t.category, SUM(t.amount) FROM Transaction t WHERE t.type = 'EXPENSE' AND " +
+           "(:from IS NULL OR t.transactionDate >= :from) AND " +
+           "(:to IS NULL OR t.transactionDate <= :to) " +
+           "GROUP BY t.category")
+    List<Object[]> sumExpensesByCategory(
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to
     );
 }
