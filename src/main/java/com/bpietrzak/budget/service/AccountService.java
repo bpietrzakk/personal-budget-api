@@ -6,6 +6,7 @@ import com.bpietrzak.budget.exception.ConflictException;
 import com.bpietrzak.budget.exception.ResourceNotFoundException;
 import com.bpietrzak.budget.model.Account;
 import com.bpietrzak.budget.repository.AccountRepository;
+import com.bpietrzak.budget.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
     public AccountResponse create(AccountCreateRequest request) {
         Account account = Account.builder()
@@ -42,9 +44,7 @@ public class AccountService {
     public void delete(UUID id) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + id));
-        // Etap 4: replace with real check — transactionRepository.existsByAccountId(id)
-        boolean hasTransactions = false;
-        if (hasTransactions) {
+        if (transactionRepository.existsByAccountId(id)) {
             throw new ConflictException("Cannot delete account with existing transactions");
         }
         accountRepository.delete(account);
