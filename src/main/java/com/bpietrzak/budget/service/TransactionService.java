@@ -47,7 +47,7 @@ public class TransactionService {
                 .build();
 
         accountRepository.save(account);
-        Transaction saved = transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.saveAndFlush(transaction);
         List<String> warnings = buildWarnings(request);
         return toResponse(saved, warnings);
     }

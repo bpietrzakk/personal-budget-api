@@ -18,8 +18,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByAccountIdOrderByTransactionDateDesc(UUID accountId);
 
     @Query("SELECT t FROM Transaction t WHERE " +
-           "(:from IS NULL OR t.transactionDate >= :from) AND " +
-           "(:to IS NULL OR t.transactionDate <= :to) AND " +
+           "t.transactionDate >= COALESCE(:from, t.transactionDate) AND " +
+           "t.transactionDate <= COALESCE(:to, t.transactionDate) AND " +
            "(:category IS NULL OR t.category = :category)")
     List<Transaction> findWithFilters(
             @Param("from") LocalDate from,
@@ -28,8 +28,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     );
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = :type AND " +
-           "(:from IS NULL OR t.transactionDate >= :from) AND " +
-           "(:to IS NULL OR t.transactionDate <= :to)")
+           "t.transactionDate >= COALESCE(:from, t.transactionDate) AND " +
+           "t.transactionDate <= COALESCE(:to, t.transactionDate)")
     BigDecimal sumByType(
             @Param("type") TransactionType type,
             @Param("from") LocalDate from,
@@ -42,8 +42,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     BigDecimal sumExpensesThisMonthByCategory(@Param("category") String category);
 
     @Query("SELECT t.category, SUM(t.amount) FROM Transaction t WHERE t.type = 'EXPENSE' AND " +
-           "(:from IS NULL OR t.transactionDate >= :from) AND " +
-           "(:to IS NULL OR t.transactionDate <= :to) " +
+           "t.transactionDate >= COALESCE(:from, t.transactionDate) AND " +
+           "t.transactionDate <= COALESCE(:to, t.transactionDate) " +
            "GROUP BY t.category")
     List<Object[]> sumExpensesByCategory(
             @Param("from") LocalDate from,
