@@ -1,0 +1,5 @@
+date,type,amount,category,description
+2026-06-05,INCOME,5000.00,Wynagrodzenie,Czerwiec
+2026-06-05,EXPENSE,50.00,Jedzenie,Kawa
+2026-06-04,EXPENSE,150.00,Jedzenie,Restauracja
+2026-06-01,EXPENSE,400.00,Jedzenie,Zakupy

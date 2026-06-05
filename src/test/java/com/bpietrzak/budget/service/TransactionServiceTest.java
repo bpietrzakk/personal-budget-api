@@ -41,7 +41,7 @@ class TransactionServiceTest {
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountRepository.save(any())).thenReturn(account);
-        when(transactionRepository.save(any())).thenAnswer(inv -> buildSavedTransaction(inv.getArgument(0), account));
+        when(transactionRepository.saveAndFlush(any())).thenAnswer(inv -> buildSavedTransaction(inv.getArgument(0), account));
 
         transactionService.create(request);
 
@@ -59,7 +59,7 @@ class TransactionServiceTest {
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountRepository.save(any())).thenReturn(account);
-        when(transactionRepository.save(any())).thenAnswer(inv -> buildSavedTransaction(inv.getArgument(0), account));
+        when(transactionRepository.saveAndFlush(any())).thenAnswer(inv -> buildSavedTransaction(inv.getArgument(0), account));
 
         transactionService.create(request);
 
@@ -77,12 +77,12 @@ class TransactionServiceTest {
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountRepository.save(any())).thenReturn(account);
-        when(transactionRepository.save(any())).thenAnswer(inv -> buildSavedTransaction(inv.getArgument(0), account));
+        when(transactionRepository.saveAndFlush(any())).thenAnswer(inv -> buildSavedTransaction(inv.getArgument(0), account));
 
         transactionService.create(request);
 
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
-        verify(transactionRepository).save(captor.capture());
+        verify(transactionRepository).saveAndFlush(captor.capture());
         assertThat(captor.getValue().getTransactionDate()).isEqualTo(LocalDate.now());
     }
 
