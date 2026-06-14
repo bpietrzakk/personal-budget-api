@@ -1,6 +1,7 @@
 HELP.md
 CLAUDE.md
-notatki.md
+Zadanie_rekrutacyjne_Software_Engineer_Intern_Java.pdf
+
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
